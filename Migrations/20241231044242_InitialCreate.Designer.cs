@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BulkyWeb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241231041340_InitialCreate")]
+    [Migration("20241231044242_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
