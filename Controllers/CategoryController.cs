@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BulkyWeb.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     public class CategoryController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -13,39 +13,121 @@ namespace BulkyWeb.Controllers
         {
             _db = db;
         }
-        [HttpGet]
+        [HttpGet("get-all")]
         public IActionResult GetAll()
         {
-            List<Category> objCategoryList = _db.Categories.ToList();
+            try
+            {
+                List<Category> objCategoryList = _db.Categories.ToList();
 
-            return Json(objCategoryList);
+                return Ok(objCategoryList);
+            }
+            catch (System.Exception ex)
+            {
+
+                return StatusCode(500, $"{ex.Message}");
+            }
         }
 
-        [HttpPost]
+
+
+        [HttpPost("create")]
         public IActionResult Create([FromBody] Category obj)
         {
-            _db.Categories.Add(obj);
-            _db.SaveChanges();
-            return Json(new { msg = "Successfully Created an Obj", obj });
+            try
+            {
+                _db.Categories.Add(obj);
+                _db.SaveChanges();
+                return Json(new { msg = "Successfully Created an Obj", obj });
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, $"{ex.Message}");
+
+            }
         }
 
+        [HttpDelete("delete-all")]
         public IActionResult DeleteAll()
         {
-            // Retrieve all categories from the database
-            var categories = _db.Categories.ToList();
-
-            if (categories.Count == 0)
+            try
             {
-                return Json(new { msg = "No categories to delete." });
+                // Retrieve all categories from the database
+                var categories = _db.Categories.ToList();
+
+                if (categories.Count == 0)
+                {
+                    return Json(new { msg = "No categories to delete." });
+                }
+
+                // Remove all categories
+                _db.Categories.RemoveRange(categories);
+
+                // Save changes to the database
+                _db.SaveChanges();
+
+                return Json(new { msg = $"{categories.Count} categories deleted." });
             }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, $"{ex.Message}");
 
-            // Remove all categories
-            _db.Categories.RemoveRange(categories);
+            }
+        }
 
-            // Save changes to the database
-            _db.SaveChanges();
+        [HttpGet("get/{id}")]
+        public IActionResult Get(int? id)
+        {
+            try
+            {
+                var categoryObject = _db.Categories.FirstOrDefault(c => c.Id == id);
+                if (categoryObject == null) return NotFound();
+                return Ok(categoryObject);
+            }
+            catch (System.Exception ex)
+            {
 
-            return Json(new { msg = $"{categories.Count} categories deleted." });
+                return StatusCode(500, $"msg: {ex.Message}");
+            }
+        }
+
+        [HttpPut("edit/{id}")]
+        public IActionResult Edit(int? id, [FromBody] Category updatedCategory)
+        {
+            try
+            {
+                var categoryObject = _db.Categories.FirstOrDefault(u => u.Id == id);
+                if (categoryObject == null) return NotFound();
+
+                categoryObject.Name = updatedCategory.Name;
+                categoryObject.DisplayOrder = updatedCategory.DisplayOrder;
+                _db.SaveChanges();
+
+                return Ok(new { msg = "New Category created", categoryObject });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"{ex.Message}");
+            }
+        }
+
+        [HttpDelete("delete/{id}")]
+        public IActionResult Delete(int? id)
+        {
+            try
+            {
+                var categoryObject = _db.Categories.FirstOrDefault(u => u.Id == id);
+                if (categoryObject == null) return NotFound();
+
+                _db.Categories.Remove(categoryObject);
+                _db.SaveChanges();
+
+                return Ok(new { msg = "Category deleted", categoryObject });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"{ex.Message}");
+            }
         }
     }
 }
